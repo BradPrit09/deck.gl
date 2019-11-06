@@ -18,24 +18,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import {CompositeLayer, AttributeManager, _compareProps as compareProps} from '@deck.gl/core';
+import {
+  Layer,
+  CompositeLayer,
+  AttributeManager,
+  _compareProps as compareProps
+} from '@deck.gl/core';
 import {cssToDeviceRatio} from '@luma.gl/core';
-
-// props when changed results in new uniforms that requires re-aggregation
-const UNIFORM_PROPS = [
-  // DATA-FILTER extension
-  'filterEnabled',
-  'filterRange',
-  'filterSoftRange',
-  'filterTransformSize',
-  'filterTransformColor'
-];
+import {filterProps} from './utils/prop-utils';
 
 export default class AggregationLayer extends CompositeLayer {
-  initializeState(aggregationProps = []) {
+  initializeState(dimensions) {
     super.initializeState();
+
+    // props , when changed doesn't require updating aggregation
+    const ignoreProps = filterProps(this.constructor._propTypes, dimensions.data.props);
+
     this.setState({
-      aggregationProps: aggregationProps.concat(UNIFORM_PROPS)
+      ignoreProps: Object.assign(ignoreProps, Layer.defaultProps),
+      dimensions
     });
   }
 
@@ -55,13 +56,17 @@ export default class AggregationLayer extends CompositeLayer {
   }
 
   updateAttributes(changedAttributes) {
-    let dataChanged = false;
-    // eslint-disable-next-line
+    const {positionAttributeName = 'positions'} = this.state;
+    let attributesChanged = false;
+    let positionsChanged = false;
     for (const name in changedAttributes) {
-      dataChanged = true;
-      break;
+      attributesChanged = true;
+      if (name === positionAttributeName) {
+        positionsChanged = true;
+        break;
+      }
     }
-    this.setState({dataChanged});
+    this.setState({attributesChanged, positionsChanged});
   }
 
   getAttributes() {
@@ -86,20 +91,47 @@ export default class AggregationLayer extends CompositeLayer {
     // Default implemention is empty, subclasses can update their Model objects if needed
   }
 
-  isAggregationDirty(opts) {
-    if (this.state.dataChanged || opts.changeFlags.extensionsChanged) {
-      return true;
+  isAggregationDataDirty(updateOpts, params = {}) {
+    const {props, oldProps, changeFlags} = updateOpts;
+    const {detectExtensionChange = false, dimension} = params;
+    const {ignoreProps} = this.state;
+    const {props: dataProps, accessors} = dimension;
+    const {updateTriggersChanged} = changeFlags;
+    if (updateTriggersChanged) {
+      if (updateTriggersChanged.all) {
+        return true;
+      }
+      if (accessors.some(accessor => updateTriggersChanged[accessor])) {
+        return true;
+      }
     }
-    const {aggregationProps} = this.state;
-    const oldProps = {};
-    const props = {};
-    for (const propName of aggregationProps) {
-      oldProps[propName] = opts.oldProps[propName];
-      props[propName] = opts.props[propName];
+    if (detectExtensionChange) {
+      if (changeFlags.extensionsChanged) {
+        return true;
+      }
+      if (
+        compareProps({
+          oldProps,
+          newProps: props,
+          ignoreProps,
+          propTypes: this.constructor._propTypes
+        })
+      ) {
+        return true;
+      }
+    } else {
+      let propChanged = false;
+      for (const name of dataProps) {
+        if (props[name] !== oldProps[name]) {
+          propChanged = true;
+          break;
+        }
+      }
+      if (propChanged) {
+        return true;
+      }
     }
-    return Boolean(
-      compareProps({oldProps, newProps: props, propTypes: this.constructor._propTypes})
-    );
+    return false;
   }
 
   // Private

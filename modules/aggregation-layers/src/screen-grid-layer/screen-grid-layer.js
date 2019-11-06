@@ -34,8 +34,20 @@ const defaultProps = Object.assign({}, ScreenGridCellLayer.defaultProps, {
   aggregation: 'SUM'
 });
 
+const DIMENSIONS = {
+  data: {
+    props: ['cellSizePixels'],
+    accessors: ['getPosition']
+  },
+  weights: {
+    props: ['aggregation'],
+    accessors: ['getWeight']
+  }
+};
+
 // props , when changed requires re-aggregation
-const AGGREGATION_PROPS = ['aggregation', 'getWeight'];
+// const AGGREGATION_PROPS = ['aggregation', 'getWeight'];
+// const AGGREGATION_ACCESSORS = ['getWeight'];
 
 export default class ScreenGridLayer extends GridAggregationLayer {
   initializeState() {
@@ -47,7 +59,7 @@ export default class ScreenGridLayer extends GridAggregationLayer {
       return;
     }
     super.initializeState({
-      aggregationProps: AGGREGATION_PROPS,
+      dimensions: DIMENSIONS,
       getCellSize: props => props.cellSizePixels
     });
     const weights = {
@@ -162,17 +174,26 @@ export default class ScreenGridLayer extends GridAggregationLayer {
       }
     }
     const gpuAggregationChanged = gpuAggregation !== this.state.gpuAggregation;
-    // Consider switching between CPU and GPU aggregation as data changed as it requires
-    // re aggregation.
-    const dataChanged =
-      this.state.dataChanged || gpuAggregationChanged || opts.changeFlags.viewportChanged;
+    this.setState({
+      gpuAggregation,
+      cellSizeChanged,
+      cellSize: opts.props.cellSizePixels
+    });
+
+    const {positionsChanged, dimensions} = this.state;
+    const {data, weights} = dimensions;
+    const aggregationDataDirty =
+      positionsChanged ||
+      this.isAggregationDataDirty(opts, {
+        detectExtensionChange: gpuAggregation,
+        dimension: data
+      });
+    const aggregationWeightsDirty = this.isAggregationDataDirty(opts, {dimension: weights});
 
     this.setState({
-      dataChanged,
-      cellSizeChanged,
-      cellSize: opts.props.cellSizePixels,
-      needsReProjection: dataChanged || cellSizeChanged,
-      gpuAggregation
+      aggregationDataDirty:
+        aggregationDataDirty || gpuAggregationChanged || opts.changeFlags.viewportChanged,
+      aggregationWeightsDirty
     });
   }
 

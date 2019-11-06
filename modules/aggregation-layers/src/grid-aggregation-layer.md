@@ -6,6 +6,7 @@ This in an abstract layer, subclassed form `AggregationLayer`, `GPUGridLayer`, `
 
 ### Updating aggregation flags
 
+ _TODO_: update this section:
 A layer extending this class must implement `updateAggregationFlags()` method to set following variables in `state` object :
 
 - `gpuAggregation` : Should be set to `true` if aggregating on `GPU`, `false` otherwise.

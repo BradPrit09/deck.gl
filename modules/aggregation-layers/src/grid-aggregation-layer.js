@@ -29,9 +29,9 @@ import BinSorter from './utils/bin-sorter';
 import {pointToDensityGridDataCPU, getGridOffset} from './cpu-grid-layer/grid-aggregator';
 
 export default class GridAggregationLayer extends AggregationLayer {
-  initializeState({aggregationProps, getCellSize}) {
+  initializeState({dimensions, getCellSize}) {
     const {gl} = this.context;
-    super.initializeState(aggregationProps);
+    super.initializeState(dimensions);
     this.setState({
       // CPU aggregation results
       layerData: {},
@@ -48,25 +48,25 @@ export default class GridAggregationLayer extends AggregationLayer {
     // update bounding box and cellSize
     this._updateProjectionParams(opts);
 
-    let aggregationDirty = false;
-    const {needsReProjection, gpuAggregation} = this.state;
-    const needsReAggregation = this.isAggregationDirty(opts);
+    const {aggregationDataDirty, aggregationWeightsDirty, gpuAggregation} = this.state;
+    // const needsReAggregation = this.isAggregationDirty(opts);
     if (this.getNumInstances() <= 0) {
       return;
     }
+    let aggregationDirty = false;
     // CPU aggregation is two steps
     // 1. Create bins (based on cellSize and position) 2. Aggregate weights for each bin
     // For GPU aggregation both above steps are combined into one step
 
     // step-1
-    if (needsReProjection || (gpuAggregation && needsReAggregation)) {
+    if (aggregationDataDirty || (gpuAggregation && aggregationWeightsDirty)) {
       this._updateAccessors(opts);
       this._resetResults();
       this._updateAggregation(opts);
       aggregationDirty = true;
     }
     // step-2 (Applicalbe for CPU aggregation only)
-    if (!gpuAggregation && (aggregationDirty || needsReAggregation)) {
+    if (!gpuAggregation && (aggregationDataDirty || aggregationWeightsDirty)) {
       this._resetResults();
       this._updateWeightBins();
       this._uploadAggregationResults();
@@ -170,12 +170,12 @@ export default class GridAggregationLayer extends AggregationLayer {
   // eslint-disable-next-line
   _updateProjectionParams(opts) {
     const {viewport} = this.context;
-    const {dataChanged, cellSizeChanged, screenSpaceAggregation} = this.state;
-    if (dataChanged && !screenSpaceAggregation) {
+    const {positionsChanged, cellSizeChanged, screenSpaceAggregation} = this.state;
+    if (positionsChanged && !screenSpaceAggregation) {
       const boundingBox = getBoundingBox(this.getAttributes(), this.getNumInstances());
       this.setState({boundingBox});
     }
-    if (dataChanged || cellSizeChanged) {
+    if (positionsChanged || cellSizeChanged) {
       // for grid contour layers transform cellSize from meters to lng/lat offsets
       const gridOffset = this._getGridOffset(opts);
       this.setState({gridOffset});

@@ -53,8 +53,15 @@ const defaultProps = {
   material: true
 };
 
-// props , when changed requires re-aggregation
-const AGGREGATION_PROPS = ['colorAggregation', 'elevationAggregation'];
+// This layer only perform GPU aggregation, no need to seperate data and weight props
+// aggregation will be dirty when any of the props are changed.
+
+const DIMENSIONS = {
+  data: {
+    props: ['cellSize', 'colorAggregation', 'elevationAggregation']
+  }
+  // rest of the changes are detected by `state.attributesChanged`
+};
 
 export default class GPUGridLayer extends GridAggregationLayer {
   initializeState() {
@@ -63,7 +70,9 @@ export default class GPUGridLayer extends GridAggregationLayer {
     if (!isSupported) {
       log.error('GPUGridLayer is not supported on this browser, use GridLayer instead')();
     }
-    super.initializeState({aggregationProps: AGGREGATION_PROPS});
+    super.initializeState({
+      dimensions: DIMENSIONS
+    });
     this.setState({
       gpuAggregation: true,
       isSupported,
@@ -86,7 +95,8 @@ export default class GPUGridLayer extends GridAggregationLayer {
             accessor: {size: 4, type: GL.FLOAT, divisor: 1}
           })
         }
-      }
+      },
+      positionAttributeName: 'positions'
     });
     const attributeManager = this.getAttributeManager();
     attributeManager.add({
@@ -282,11 +292,18 @@ export default class GPUGridLayer extends GridAggregationLayer {
 
   updateAggregationFlags(opts) {
     const cellSizeChanged = opts.oldProps.cellSize !== opts.props.cellSize;
-    const {dataChanged} = this.state;
+    const {attributesChanged, dimensions} = this.state;
+    const aggregationDataDirty =
+      attributesChanged ||
+      this.isAggregationDataDirty(opts, {
+        dimension: dimensions.data,
+        detectExtensionChange: true
+      });
+
     this.setState({
       cellSizeChanged,
       cellSize: opts.props.cellSize,
-      needsReProjection: dataChanged || cellSizeChanged
+      aggregationDataDirty
     });
   }
 }
