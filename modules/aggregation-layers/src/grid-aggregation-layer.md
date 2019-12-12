@@ -4,14 +4,38 @@ This layer performs some common tasks required to perform aggregation to grid ce
 
 This in an abstract layer, subclassed form `AggregationLayer`, `GPUGridLayer`, `ScreenGridLayer` and `ContourLayer` are subclassed from this layer.
 
+### Dimensions
+
+Subclasses must provide `dimensions` object to `initializeState()`. This object must contain `data` key and optionally contain `weights` key.
+
+```
+const DIMENSIONS = {
+  data: {
+    props: ['cellSizePixels'],
+    accessors: ['getPosition']
+  },
+  weights: {
+    props: ['aggregation'],
+    accessors: ['getWeight']
+  }
+};
+```
+
+* `data` : this dimension defines set of props and accessors, when changed, data needs to be re-aggregated into bins.
+
+* `weights` : this dimension defines set of props and accessors, when changed, aggregated value of each bin needs to be re-calculated.
+
+During the `updateState()`, layer can use each dimension to detect if aggregation is dirty. A layer can define additional dimensions, and take an appropriate action when it is dirty.
+
+NOTE: In case of GPU aggregation, binning and aggregation of values is performed in single step, so `props` and `accessors` can be grouped into `data` dimension.
+
 ### Updating aggregation flags
 
- _TODO_: update this section:
 A layer extending this class must implement `updateAggregationFlags()` method to set following variables in `state` object :
 
 - `gpuAggregation` : Should be set to `true` if aggregating on `GPU`, `false` otherwise.
-- `needsReProjection` : Should be set to `true` if data needs to be reprojected. For example, `ScreenGridLayer` sets this flag to true when `viewport` is changed.
-- `dataChanged` : Should be set to true, if data required for aggregation is changed.
+- `aggregationDataDirty` : Should be set to `true` if data needs to be re aggregated into bins. For example, `ScreenGridLayer` sets this flag to true when `viewport` is changed.
+- `aggregationWeightsDirty` : Should be set to true if aggregation of value of bins need to be re-calculated, applicable only for CPU Aggregation.
 - `cellSize` : Should be set to the size of the grid cell.
 -  `cellSizeChanged` : Should be set to true when grid cell size is changed.
 

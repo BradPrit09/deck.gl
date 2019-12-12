@@ -32,4 +32,24 @@ During update state, Subclasses of `AggregationLayer` must first call 'super.upd
 
 ### Checking if aggregation is dirty
 
-Constructor, takes an array of props, `aggregationProps`, and a private method `isAggregationDirty()` is provided that returns `true` when any of the props in `aggregationProps` are changed. Subclasses can customize this to desired props by providing `aggregatinProps` array.
+#### Dimensions
+
+Typical aggregation, involves :
+1. Group the input data points into bins
+2. Compute the aggregated value for each bin
+
+For example, when `cellSize` or `data` is changed, layer needs to perform both `1` and `2` steps, when a parameter affecting a bin's value is changed, layer only need to perform step `2`.
+
+To support what state is dirty, constructor takes `dimensions` object, which contains, several keyed dimensions. It must contain `data` dimension that defines, when re-aggregation needs to be performed.
+
+Subclasses, can use, `AggregationLayer.isAggregationDirty()` method to check if a dimension is dirty.
+
+#### Aggregation State
+
+`AggregationLayer` is responsible for setting following values in `sate` object:
+
+* `positionsChanged` : Set to `true` when the position attribute is changed. Super layers must set `state.positionAttributeName`, to define the name of position attribute, by default `positions` is used as name of position attribute. This flag, can be used to re compute aggregation parameters that depend on position data, such as bounding-box etc.
+
+* `attributesChanged` : Set to `true`, when any of the attributes are changed. This flag can be used to re-trigger aggregation.
+
+It is up to the subclasses how to use these flags, based on aggregation needs. For example, GPU aggregation layer can trigger re aggregation when `attributesChanged`.
