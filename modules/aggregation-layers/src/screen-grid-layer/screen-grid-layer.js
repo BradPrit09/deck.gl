@@ -36,8 +36,7 @@ const defaultProps = Object.assign({}, ScreenGridCellLayer.defaultProps, {
 
 const DIMENSIONS = {
   data: {
-    props: ['cellSizePixels'],
-    accessors: ['getPosition']
+    props: ['cellSizePixels']
   },
   weights: {
     props: ['aggregation'],

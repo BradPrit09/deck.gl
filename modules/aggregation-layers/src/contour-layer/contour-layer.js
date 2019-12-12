@@ -47,8 +47,7 @@ const defaultProps = {
 
 const DIMENSIONS = {
   data: {
-    props: ['cellSize'],
-    accessors: ['getPosition']
+    props: ['cellSize']
   },
   weights: {
     props: ['aggregation'],
