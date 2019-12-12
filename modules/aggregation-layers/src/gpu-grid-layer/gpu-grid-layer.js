@@ -295,7 +295,7 @@ export default class GPUGridLayer extends GridAggregationLayer {
     const {attributesChanged, dimensions} = this.state;
     const aggregationDataDirty =
       attributesChanged ||
-      this.isAggregationDataDirty(opts, {
+      this.isAggregationDirty(opts, {
         dimension: dimensions.data,
         detectExtensionChange: true
       });

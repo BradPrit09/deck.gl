@@ -60,7 +60,7 @@ class TestAggregationLayer extends AggregationLayer {
     this.setState({aggregationDirty: false});
     super.updateState(opts);
     this.setState({
-      aggregationDirty: this.isAggregationDataDirty(opts, {
+      aggregationDirty: this.isAggregationDirty(opts, {
         dimension: this.state.dimensions.data,
         detectExtensionChange: true
       })

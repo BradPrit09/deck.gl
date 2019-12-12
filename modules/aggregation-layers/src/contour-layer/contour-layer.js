@@ -45,10 +45,6 @@ const defaultProps = {
   zOffset: 0.005
 };
 
-// props , when changed requires re-aggregation
-// const AGGREGATION_PROPS = ['cellSize', 'aggregation'];
-// const AGGREGATION_ACCESSORS = ['getWeight'];
-
 const DIMENSIONS = {
   data: {
     props: ['cellSize'],
@@ -72,7 +68,8 @@ export default class ContourLayer extends GridAggregationLayer {
           size: 1,
           operation: AGGREGATION_OPERATION.SUM
         }
-      }
+      },
+      positionAttributeName: 'positions'
     });
     const attributeManager = this.getAttributeManager();
     attributeManager.add({
@@ -167,11 +164,11 @@ export default class ContourLayer extends GridAggregationLayer {
     const {data, weights} = dimensions;
     const aggregationDataDirty =
       positionsChanged ||
-      this.isAggregationDataDirty(opts, {
+      this.isAggregationDirty(opts, {
         dimension: data,
         detectExtensionChange: gpuAggregation // data-filter extension is only supported when using gpu aggregation
       });
-    const aggregationWeightsDirty = this.isAggregationDataDirty(opts, {
+    const aggregationWeightsDirty = this.isAggregationDirty(opts, {
       dimension: weights
     });
 

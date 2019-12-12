@@ -91,7 +91,7 @@ export default class AggregationLayer extends CompositeLayer {
     // Default implemention is empty, subclasses can update their Model objects if needed
   }
 
-  isAggregationDataDirty(updateOpts, params = {}) {
+  isAggregationDirty(updateOpts, params = {}) {
     const {props, oldProps, changeFlags} = updateOpts;
     const {detectExtensionChange = false, dimension} = params;
     const {ignoreProps} = this.state;

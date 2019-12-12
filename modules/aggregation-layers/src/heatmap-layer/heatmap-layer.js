@@ -234,7 +234,7 @@ export default class HeatmapLayer extends AggregationLayer {
     const {attributesChanged, dimensions} = this.state;
     changeFlags.dataChanged =
       attributesChanged ||
-      this.isAggregationDataDirty(opts, {
+      this.isAggregationDirty(opts, {
         detectExtensionChange: true,
         dimension: dimensions.data
       });
@@ -270,6 +270,7 @@ export default class HeatmapLayer extends AggregationLayer {
       positions: {size: 3, accessor: 'getPosition'},
       weights: {size: 1, accessor: 'getWeight'}
     });
+    this.setState({positionAttributeName: 'positions'});
   }
 
   _setupTextureParams() {

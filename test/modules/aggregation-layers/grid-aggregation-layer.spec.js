@@ -128,11 +128,11 @@ class TestGridAggregationLayer extends GridAggregationLayer {
     const {data, weights} = dimensions;
     const aggregationDataDirty =
       positionsChanged ||
-      this.isAggregationDataDirty(opts, {
+      this.isAggregationDirty(opts, {
         dimension: data,
         detectExtensionChange: gpuAggregation // data-filter extension is only supported when using gpu aggregation
       });
-    const aggregationWeightsDirty = this.isAggregationDataDirty(opts, {
+    const aggregationWeightsDirty = this.isAggregationDirty(opts, {
       dimension: weights
     });
 

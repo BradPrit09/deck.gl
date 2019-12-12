@@ -45,10 +45,6 @@ const DIMENSIONS = {
   }
 };
 
-// props , when changed requires re-aggregation
-// const AGGREGATION_PROPS = ['aggregation', 'getWeight'];
-// const AGGREGATION_ACCESSORS = ['getWeight'];
-
 export default class ScreenGridLayer extends GridAggregationLayer {
   initializeState() {
     const {gl} = this.context;
@@ -75,7 +71,8 @@ export default class ScreenGridLayer extends GridAggregationLayer {
       weights,
       subLayerData: {attributes: {}},
       screenSpaceAggregation: true,
-      maxTexture: weights.count.maxTexture
+      maxTexture: weights.count.maxTexture,
+      positionAttributeName: 'positions'
     });
     const attributeManager = this.getAttributeManager();
     attributeManager.add({
@@ -184,11 +181,11 @@ export default class ScreenGridLayer extends GridAggregationLayer {
     const {data, weights} = dimensions;
     const aggregationDataDirty =
       positionsChanged ||
-      this.isAggregationDataDirty(opts, {
+      this.isAggregationDirty(opts, {
         detectExtensionChange: gpuAggregation,
         dimension: data
       });
-    const aggregationWeightsDirty = this.isAggregationDataDirty(opts, {dimension: weights});
+    const aggregationWeightsDirty = this.isAggregationDirty(opts, {dimension: weights});
 
     this.setState({
       aggregationDataDirty:

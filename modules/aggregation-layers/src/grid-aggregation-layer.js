@@ -49,7 +49,6 @@ export default class GridAggregationLayer extends AggregationLayer {
     this._updateProjectionParams(opts);
 
     const {aggregationDataDirty, aggregationWeightsDirty, gpuAggregation} = this.state;
-    // const needsReAggregation = this.isAggregationDirty(opts);
     if (this.getNumInstances() <= 0) {
       return;
     }
